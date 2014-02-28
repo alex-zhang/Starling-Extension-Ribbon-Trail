@@ -46,7 +46,7 @@ package starling.extensions
 		protected var mTrailSegments:Vector.<TrailSegment>;
 		protected var mNumTrailSegments:int;
 
-		protected var mFloowingEnable:Boolean = true;
+		protected var mFollowingEnable:Boolean = true;
 
 		protected var mMovingRatio:Number = 0.5;
 		protected var mAlphaRatio:Number = 0.95;
@@ -95,8 +95,8 @@ package starling.extensions
 			raiseCapacity(mNumTrailSegments);
 		}
 		
-		public function get floowingEnable():Boolean { return mFloowingEnable; }
-		public function set floowingEnable(value:Boolean):void { mFloowingEnable = value; }
+		public function get FollowingEnable():Boolean { return mFollowingEnable; }
+		public function set FollowingEnable(value:Boolean):void { mFollowingEnable = value; }
 
 		public function get isPlaying():Boolean { return mIsPlaying; }
 		public function set isPlaying(value:Boolean):void { mIsPlaying = value; }
@@ -160,11 +160,11 @@ package starling.extensions
 			return mTrailSegments[index]; 
 		}
 		
-		public function floowTo(x0:Number, y0:Number, x1:Number, y1:Number,
+		public function FollowTo(x0:Number, y0:Number, x1:Number, y1:Number,
 								alpha:Number = 1.0,
 								color:uint = 0xFFFFFF):void
 		{
-			if(mFloowingEnable)
+			if(mFollowingEnable)
 			{
 				mTrailSegments[0].setTo(x0, y0, x1, y1, alpha, color);
 			}
