@@ -46,18 +46,14 @@ package starling.extensions
 		protected var mTrailSegments:Vector.<TrailSegment>;
 		protected var mNumTrailSegments:int;
 
-		protected var mFloowingX:Number = 0;
-		protected var mFloowingY:Number = 0;
-		protected var mAllowFloowing:Boolean = true;
-		protected var mThickness:Number = 0;
-		protected var mDecayRatio:Number = 0.2;
+		protected var mFloowingEnable:Boolean = true;
+
+		protected var mMovingRatio:Number = 0.5;
+		protected var mAlphaRatio:Number = 0.95;
+		protected var mColorRatio:Number = 1;//default
 		
 		//the fixed vertex props.
 		protected var mRepeat:Boolean = false;
-		protected var mStarAlpha:Number = 1.0;
-		protected var mEndAlpha:Number = 0;
-		protected var mStarColor:uint = 0xFFFFFF;
-		protected var mEndColor:uint = 0xFFFFFF;
 		
 		protected var mIsPlaying:Boolean = false;
 		
@@ -65,7 +61,6 @@ package starling.extensions
 		protected var mVertexFixedDataDirty:Boolean = false;
 		
 		public function RibbonTrail(texture:Texture, 
-									thickness:Number,
 									trailSegments:int = 10)
 		{
 			super();
@@ -74,6 +69,11 @@ package starling.extensions
 			{
 				throw new ArgumentError("Texture cannot be null");
 			}
+			
+			if(trailSegments < 2)
+			{
+				throw new ArgumentError("trailSegments count must big than 2");
+			}
 
 			mTexture = texture;
 
@@ -81,7 +81,6 @@ package starling.extensions
 			mIndexData = new <uint>[];
 			mTrailSegments = new <TrailSegment>[];
 
-			mThickness = thickness;
 			raiseCapacity(trailSegments);
 			createProgram();
 			
@@ -96,23 +95,38 @@ package starling.extensions
 			raiseCapacity(mNumTrailSegments);
 		}
 		
-		public function get floowingX():Number { return mFloowingX; }
-		public function set floowingX(value:Number):void { mFloowingX = value; }
-		
-		public function get floowingY():Number { return mFloowingY; }
-		public function set floowingY(value:Number):void { mFloowingY = value; }
-		
-		public function get allowFloowing():Boolean { return mAllowFloowing; }
-		public function set allowFloowing(value:Boolean):void { mAllowFloowing = value; }
-		
-		public function get thickness():Number { return mThickness; }
-		public function set thickness(value:Number):void { mThickness = value; }
+		public function get floowingEnable():Boolean { return mFloowingEnable; }
+		public function set floowingEnable(value:Boolean):void { mFloowingEnable = value; }
 
 		public function get isPlaying():Boolean { return mIsPlaying; }
 		public function set isPlaying(value:Boolean):void { mIsPlaying = value; }
 		
-		public function get decayRatio():Number { return mDecayRatio; }
-		public function set decayRatio(value:Number):void { mDecayRatio = value; }
+		public function get movingRatio():Number { return mMovingRatio; }
+		public function set movingRatio(value:Number):void 
+		{ 
+			if(mMovingRatio != value)
+			{
+				mMovingRatio = value < 0.0 ? 0.0 : (value > 1.0 ? 1.0 : value); 
+			}
+		}
+		
+		public function get alphaRatio():Number { return mAlphaRatio; }
+		public function set alphaRatio(value:Number):void 
+		{
+			if(mAlphaRatio != value)
+			{
+				mAlphaRatio = value < 0.0 ? 0.0 : (value > 1.0 ? 1.0 : value); 
+			}
+		}
+		
+		public function get colorRatio():Number { return mColorRatio; }
+		public function set colorRatio(value:Number):void 
+		{
+			if(mColorRatio != value)
+			{
+				mColorRatio = value < 0.0 ? 0.0 : (value > 1.0 ? 1.0 : value); 
+			}
+		}
 		
 		public function get texture():Texture { return mTexture; }
 		public function set texture(value:Texture):void 
@@ -141,48 +155,25 @@ package starling.extensions
 			}
 		}
 		
-		public function get startAlpha():Number { return mStarAlpha; }
-		public function get endAlpha():Number { return mEndAlpha; }
-		
-		public function setStarToEndAlpha(startAlpha:Number, endAlpha:Number):void
+		public function getTrailSegment(index:int):TrailSegment
 		{
-			if(mStarAlpha != startAlpha ||
-				mEndAlpha != endAlpha)
-			{
-				mStarAlpha = startAlpha;
-				mEndAlpha = endAlpha;
-				
-				mVertexFixedDataDirty = true;
-			}
+			return mTrailSegments[index]; 
 		}
 		
-		public function get startColor():Number { return mStarColor; }
-		public function get endColor():Number { return mEndColor; }
-		
-		public function setStarToEndColor(startColor:uint, endColor:uint):void
+		public function floowTo(x0:Number, y0:Number, x1:Number, y1:Number,
+								alpha:Number = 1.0,
+								color:uint = 0xFFFFFF):void
 		{
-			if(mStarColor != startColor ||
-				mEndColor != endColor)
+			if(mFloowingEnable)
 			{
-				mStarColor = startColor;
-				mEndColor = endColor;
-				
-				mVertexFixedDataDirty = true;
+				mTrailSegments[0].setTo(x0, y0, x1, y1, alpha, color);
 			}
-		}
-		
-		public function getPointByTrailSegmentIndex(trailSegmentIndex:int, result:Point = null):Point
-		{
-			if(!result) result = new Point();
-			
-			var trailSegment:TrailSegment = mTrailSegments[trailSegmentIndex]; 
-			result.setTo(trailSegment.x, trailSegment.y);
-
-			return result;
 		}
 		
 		//because of segments have the invalid pos so syc here.
-		public function resetAllTrailSegmentsPosition():void
+		public function resetAllTo(x0:Number, y0:Number, x1:Number, y1:Number,
+								   alpha:Number = 1.0,
+								   color:uint = 0xFFFFFF):void
 		{
 			var trailSegment:TrailSegment;
 			var trailSegmentIndex:int = 0;
@@ -190,9 +181,7 @@ package starling.extensions
 			while(trailSegmentIndex < mNumTrailSegments)
 			{
 				trailSegment = mTrailSegments[trailSegmentIndex];
-
-				trailSegment.x = floowingX;
-				trailSegment.y = floowingY;
+				trailSegment.setTo(x0, y0, x1, y1, alpha, color);
 
 				trailSegmentIndex++;
 			}
@@ -203,14 +192,6 @@ package starling.extensions
 			var shareRatio:Number = 1 / mNumTrailSegments;
 			var ratio:Number = 0;
 
-			//alpha
-			var deltaAlpha:Number = mEndAlpha - mStarAlpha;
-			var resultAlpha:Number = 0;
-			
-			//color
-			var deltaColor:int = mEndColor - mStarColor;
-			var resultColor:uint = 0;
-			
 			var vertexId:int = 0;
 			var trailSegmentIndex:int = 0;
 			
@@ -219,14 +200,6 @@ package starling.extensions
 				vertexId = trailSegmentIndex * 2;
 				
 				ratio = trailSegmentIndex * shareRatio;
-				
-				//lerp alpha.
-				resultAlpha = mStarAlpha + deltaAlpha * ratio;
-				//lerp color.
-				resultColor = mStarColor + deltaColor * ratio;
-				
-				mVertexData.setColorAndAlpha(vertexId, resultColor, resultAlpha);
-				mVertexData.setColorAndAlpha(int(vertexId + 1), resultColor, resultAlpha);
 				
 				//uv.
 				if(mRepeat)
@@ -271,38 +244,27 @@ package starling.extensions
 			var vertexId:int = 0;
 			var trailSegment:TrailSegment;
 			var preTrailSegment:TrailSegment;
-			var trailSegmentIndex:int = 0;
 			
+			var trailSegmentIndex:int = 0;
 			while(trailSegmentIndex < mNumTrailSegments)
 			{
-				trailSegment = mTrailSegments[trailSegmentIndex];
 				vertexId = trailSegmentIndex * 2;
-
-				if(trailSegmentIndex == 0)
-				{
-					//test
-//					var flashStage:Stage = Starling.current.nativeStage;
-//					mFloowingX = flashStage.mouseX;
-//					mFloowingY = flashStage.mouseY;
-
-					//record the cur pos.
-					if(mAllowFloowing)
-					{
-						trailSegment.x = mFloowingX;
-						trailSegment.y = mFloowingY;	
-					}
-				}
-				else
+				
+				trailSegment = mTrailSegments[trailSegmentIndex];
+				
+				if(trailSegmentIndex > 0)
 				{
 					preTrailSegment = mTrailSegments[trailSegmentIndex - 1];
-					
-					trailSegment.x += (preTrailSegment.x - trailSegment.x) * mDecayRatio;
-					trailSegment.y += (preTrailSegment.y - trailSegment.y) * mDecayRatio;
+					trailSegment.tweenTo(preTrailSegment, passedTime);
 				}
-
-				mVertexData.setPosition(vertexId, 		   trailSegment.x, trailSegment.y - mThickness);
-				mVertexData.setPosition(int(vertexId + 1), trailSegment.x, trailSegment.y + mThickness);
 				
+				//syc the vertex data from trailSegment.
+				mVertexData.setPosition(vertexId, 		   trailSegment.x0, trailSegment.y0);
+				mVertexData.setColorAndAlpha(vertexId, trailSegment.color, trailSegment.alpha);
+
+				mVertexData.setPosition(int(vertexId + 1), trailSegment.x1, trailSegment.y1);
+				mVertexData.setColorAndAlpha(int(vertexId + 1), trailSegment.color, trailSegment.alpha);
+
 				//increase the index.
 				++trailSegmentIndex;
 			}
@@ -344,9 +306,14 @@ package starling.extensions
 			mTrailSegments.fixed = false;
 			mIndexData.fixed = false;
 			
+			var trailSegment:TrailSegment;
+			
 			for(var trailSegmentIndex:int = oldNumTrailSegments; trailSegmentIndex < mNumTrailSegments; trailSegmentIndex++)  
 			{
-				mTrailSegments[trailSegmentIndex] = createTrailSegment();
+				trailSegment = createTrailSegment();
+				trailSegment.ribbonTrail = this;
+				mTrailSegments[trailSegmentIndex] = trailSegment;
+				
 				mVertexData.append(baseVertexData);
 				
 				//mIndexData

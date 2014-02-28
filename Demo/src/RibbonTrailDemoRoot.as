@@ -2,9 +2,7 @@ package
 {
 	import flash.display.Stage;
 	import flash.events.KeyboardEvent;
-	import flash.text.engine.BreakOpportunity;
 	import flash.ui.Keyboard;
-	import flash.utils.describeType;
 	
 	import starling.animation.IAnimatable;
 	import starling.core.Starling;
@@ -16,6 +14,7 @@ package
 	import starling.textures.TextureAtlas;
 	import starling.utils.HAlign;
 	import starling.utils.VAlign;
+	import starling.utils.deg2rad;
 
 	public class RibbonTrailDemoRoot extends Sprite implements IAnimatable
 	{
@@ -39,9 +38,12 @@ package
 				"press key 'T' to switch texture \n" +
 				"press key 'R' to switch repeat model \n" +
 				"press key 'P' to switch resume and pause state \n" +
-				"press key 'F' to switch allowFloowing state \n" +
-				"press key 'H' to increase thickness and 'ctrl' + 'H' to decrease \n" +
-				"press key 'D' to increase decayRatio and 'ctrl' + 'D' to decrease \n");
+				"press key 'F' to switch floowingEnable state \n" +
+				"press key 'M' to  increase moving ratio or 'ctrl' + 'M' decrease.\n" +
+				"press key 'A' to  increase alpha ratio or 'ctrl' + 'A' decrease.\n" +
+				"press key 'C' to  increase color ratio or 'ctrl' + 'C' decrease.\n" +
+				""
+			);
 			
 			helpText.hAlign = HAlign.LEFT;
 			helpText.vAlign = VAlign.TOP;
@@ -62,7 +64,6 @@ package
 				
 			//---
 			
-			
 			[Embed(source="atlas.png")]
 			var atlas0Cls:Class;
 			texture = Texture.fromBitmap(new atlas0Cls(), false);
@@ -78,22 +79,41 @@ package
 			textures.push(textureAtlas0.getTexture("flight_00"));
 
 			//init ribbonTrail
-			ribbonTrail = new RibbonTrail(textures[0], 50, 50);
+			ribbonTrail = new RibbonTrail(textures[0], 50);
 			ribbonTrail.isPlaying = true;
-			ribbonTrail.setStarToEndAlpha(1.0, 0);
-//			ribbonTrail.setStarToEndColor(0xFFFFFF, 0);
+			ribbonTrail.movingRatio = 0.4;
+			ribbonTrail.alphaRatio = 0.95;
+			ribbonTrail.colorRatio = 1;
 			addChild(ribbonTrail);
 			
 			Starling.current.juggler.add(this);
 			Starling.current.nativeStage.addEventListener(KeyboardEvent.KEY_UP, stageKeyUpHandler);
 		}
 		
+		private var rotation:Number = 0.0; 
+		private var color:uint = 0xFFFFFF;
+		
 		public function advanceTime(passedTime:Number):void
 		{
 			var flashStage:Stage = Starling.current.nativeStage;
 			
-			ribbonTrail.floowingX = flashStage.mouseX;
-			ribbonTrail.floowingY = flashStage.mouseY;
+			var x:Number = flashStage.mouseX;
+			var y:Number = flashStage.mouseY;
+			
+			var thcikness:Number = 100;
+			
+			rotation += deg2rad(90 * passedTime);
+			
+			var x0:Number = x + thcikness * Math.cos(rotation);
+			var y0:Number = y - thcikness * Math.sin(rotation);
+
+			var x1:Number = x - thcikness * Math.cos(rotation);
+			var y1:Number = y + thcikness * Math.sin(rotation);
+			
+			color -= 255;
+			
+			//the flow target color is real time change.
+			ribbonTrail.floowTo(x0, y0, x1, y1, alpha, color);
 			
 			ribbonTrail.advanceTime(passedTime);
 		}
@@ -115,28 +135,39 @@ package
 					break;
 				
 				case Keyboard.F:
-					ribbonTrail.allowFloowing = !ribbonTrail.allowFloowing;
+					ribbonTrail.floowingEnable = !ribbonTrail.floowingEnable;
 					break;
-
-				case Keyboard.H:
+				
+				case Keyboard.M:
 					if(event.ctrlKey)
 					{
-						ribbonTrail.thickness = ribbonTrail.thickness * 0.8;
+						ribbonTrail.movingRatio -= 0.1;
 					}
 					else
 					{
-						ribbonTrail.thickness = ribbonTrail.thickness * 1.2;
+						ribbonTrail.movingRatio += 0.1;
 					}
 					break;
 				
-				case Keyboard.D:
+				case Keyboard.A:
 					if(event.ctrlKey)
 					{
-						ribbonTrail.decayRatio = ribbonTrail.decayRatio * 0.8;
+						ribbonTrail.alphaRatio -= 0.01;
 					}
 					else
 					{
-						ribbonTrail.decayRatio = ribbonTrail.decayRatio * 1.2;
+						ribbonTrail.alphaRatio += 0.01;
+					}
+					break;
+				
+				case Keyboard.C:
+					if(event.ctrlKey)
+					{
+						ribbonTrail.colorRatio -= 0.01;
+					}
+					else
+					{
+						ribbonTrail.colorRatio += 0.01;
 					}
 					break;
 			}
@@ -149,7 +180,7 @@ package
 			{
 				curentTexureIndex = 0;
 			}
-			
+
 			ribbonTrail.texture = textures[curentTexureIndex];
 		}
 	}
