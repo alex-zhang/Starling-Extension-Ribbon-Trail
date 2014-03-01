@@ -1,7 +1,5 @@
 package starling.extensions
 {
-	import starling.utils.Color;
-
 	public class TrailSegment
 	{
 		public var ribbonTrail:RibbonTrail;
@@ -12,7 +10,6 @@ package starling.extensions
 		public var x1:Number = 0.0;
 		public var y1:Number = 0.0;
 		
-		public var color:uint = 0xFFFFFF;
 		public var alpha:Number = 1.0;
 		
 		public function TrailSegment()
@@ -34,9 +31,9 @@ package starling.extensions
 			//percent of pre alpha.
 			alpha = preTrailSegment.alpha * ribbonTrail.alphaRatio;
 			
+			//!remove color it's not necessary.
 			//just percent of pre color.
-			color = preTrailSegment.color * ribbonTrail.colorRatio;
-			
+//			color = preTrailSegment.color * ribbonTrail.colorRatio;
 			//useless of color change below.
 			//expansive for color caculate.
 //			var colorRatio:Number = ribbonTrail.colorRatio;
@@ -64,7 +61,7 @@ package starling.extensions
 			this.y1 = y1;
 			
 			this.alpha = alpha;
-			this.color = color;
+//			this.color = color;
 		}
 		
 		public function copyFrom(trailSegment:TrailSegment):void
@@ -76,8 +73,7 @@ package starling.extensions
 			y1 = trailSegment.y0;
 			
 			alpha = trailSegment.alpha;
-			
-			color = trailSegment.color;
+//			color = trailSegment.color;
 		}
 		
 		public function toString():String
@@ -87,66 +83,11 @@ package starling.extensions
 				"y0= " + y0 + ", " +
 				"x1= " + x1 + ", " +
 				"y1= " + y1 + ", " +
-				"alpha= " + alpha + "," +
-				"color= " + color.toString(16) + "]";
+				"alpha= " + alpha +
+//				"color= " + color.toString(16) + 
+				"]";
 			
 			return results;
 		}
-		
-		
-//		protected function updatevertexData():void
-//		{
-//			var shareRatio:Number = 1 / mNumTrailSegments;
-//			var ratio:Number = 0;
-//			
-//			//alpha
-//			var deltaAlpha:Number = mEndAlpha - mStarAlpha;
-//			var resultAlpha:Number = 0;
-//			
-//			//color
-//			var deltaColor:int = mEndColor - mStarColor;
-//			var resultColor:uint = 0;
-//			
-//			var vertexId:int = 0;
-//			var trailSegmentIndex:int = 0;
-//			
-//			while(trailSegmentIndex < mNumTrailSegments)
-//			{
-//				vertexId = trailSegmentIndex * 2;
-//				
-//				ratio = trailSegmentIndex * shareRatio;
-//				
-//				//lerp alpha.
-//				resultAlpha = mStarAlpha + deltaAlpha * ratio;
-//				//lerp color.
-//				resultColor = mStarColor + deltaColor * ratio;
-//				
-//				mVertexData.setColorAndAlpha(vertexId, resultColor, resultAlpha);
-//				mVertexData.setColorAndAlpha(int(vertexId + 1), resultColor, resultAlpha);
-//				
-//				//uv.
-//				if(mRepeat)
-//				{
-//					sMapTexCoords[0] = trailSegmentIndex;
-//					sMapTexCoords[1] = 0;
-//					sMapTexCoords[2] = trailSegmentIndex;
-//					sMapTexCoords[3] = 1;
-//				}
-//				else
-//				{
-//					sMapTexCoords[0] = ratio;
-//					sMapTexCoords[1] = 0;
-//					sMapTexCoords[2] = ratio;
-//					sMapTexCoords[3] = 1;
-//				}
-//				
-//				mTexture.adjustTexCoords(sMapTexCoords, 0, 0, 2);
-//				
-//				mVertexData.setTexCoords(vertexId, sMapTexCoords[0] , sMapTexCoords[1]);
-//				mVertexData.setTexCoords(int(vertexId + 1), sMapTexCoords[2] , sMapTexCoords[3]);
-//				
-//				trailSegmentIndex++;
-//			}
-//		}
 	}
 }

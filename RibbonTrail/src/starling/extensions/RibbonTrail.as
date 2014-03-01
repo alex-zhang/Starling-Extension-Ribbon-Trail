@@ -50,7 +50,6 @@ package starling.extensions
 
 		protected var mMovingRatio:Number = 0.5;
 		protected var mAlphaRatio:Number = 0.95;
-		protected var mColorRatio:Number = 1;//default
 		
 		//the fixed vertex props.
 		protected var mRepeat:Boolean = false;
@@ -95,8 +94,8 @@ package starling.extensions
 			raiseCapacity(mNumTrailSegments);
 		}
 		
-		public function get FollowingEnable():Boolean { return mFollowingEnable; }
-		public function set FollowingEnable(value:Boolean):void { mFollowingEnable = value; }
+		public function get followingEnable():Boolean { return mFollowingEnable; }
+		public function set followingEnable(value:Boolean):void { mFollowingEnable = value; }
 
 		public function get isPlaying():Boolean { return mIsPlaying; }
 		public function set isPlaying(value:Boolean):void { mIsPlaying = value; }
@@ -116,15 +115,6 @@ package starling.extensions
 			if(mAlphaRatio != value)
 			{
 				mAlphaRatio = value < 0.0 ? 0.0 : (value > 1.0 ? 1.0 : value); 
-			}
-		}
-		
-		public function get colorRatio():Number { return mColorRatio; }
-		public function set colorRatio(value:Number):void 
-		{
-			if(mColorRatio != value)
-			{
-				mColorRatio = value < 0.0 ? 0.0 : (value > 1.0 ? 1.0 : value); 
 			}
 		}
 		
@@ -160,20 +150,18 @@ package starling.extensions
 			return mTrailSegments[index]; 
 		}
 		
-		public function FollowTo(x0:Number, y0:Number, x1:Number, y1:Number,
-								alpha:Number = 1.0,
-								color:uint = 0xFFFFFF):void
+		public function followTo(x0:Number, y0:Number, x1:Number, y1:Number,
+								alpha:Number = 1.0):void
 		{
 			if(mFollowingEnable)
 			{
-				mTrailSegments[0].setTo(x0, y0, x1, y1, alpha, color);
+				mTrailSegments[0].setTo(x0, y0, x1, y1, alpha);
 			}
 		}
 		
 		//because of segments have the invalid pos so syc here.
 		public function resetAllTo(x0:Number, y0:Number, x1:Number, y1:Number,
-								   alpha:Number = 1.0,
-								   color:uint = 0xFFFFFF):void
+								   alpha:Number = 1.0):void
 		{
 			var trailSegment:TrailSegment;
 			var trailSegmentIndex:int = 0;
@@ -181,7 +169,7 @@ package starling.extensions
 			while(trailSegmentIndex < mNumTrailSegments)
 			{
 				trailSegment = mTrailSegments[trailSegmentIndex];
-				trailSegment.setTo(x0, y0, x1, y1, alpha, color);
+				trailSegment.setTo(x0, y0, x1, y1, alpha);
 
 				trailSegmentIndex++;
 			}
@@ -260,10 +248,10 @@ package starling.extensions
 				
 				//syc the vertex data from trailSegment.
 				mVertexData.setPosition(vertexId, 		   trailSegment.x0, trailSegment.y0);
-				mVertexData.setColorAndAlpha(vertexId, trailSegment.color, trailSegment.alpha);
+				mVertexData.setAlpha(vertexId, trailSegment.alpha);
 
 				mVertexData.setPosition(int(vertexId + 1), trailSegment.x1, trailSegment.y1);
-				mVertexData.setColorAndAlpha(int(vertexId + 1), trailSegment.color, trailSegment.alpha);
+				mVertexData.setAlpha(int(vertexId + 1), trailSegment.alpha);
 
 				//increase the index.
 				++trailSegmentIndex;
@@ -302,6 +290,7 @@ package starling.extensions
 			if (context == null) throw new MissingContextError();
 
 			var baseVertexData:VertexData = new VertexData(2);
+			baseVertexData.setUniformColor(0xFFFFFF);
 
 			mTrailSegments.fixed = false;
 			mIndexData.fixed = false;

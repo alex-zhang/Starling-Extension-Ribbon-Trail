@@ -41,7 +41,6 @@ package
 				"press key 'F' to switch floowingEnable state \n" +
 				"press key 'M' to  increase moving ratio or 'ctrl' + 'M' decrease.\n" +
 				"press key 'A' to  increase alpha ratio or 'ctrl' + 'A' decrease.\n" +
-				"press key 'C' to  increase color ratio or 'ctrl' + 'C' decrease.\n" +
 				""
 			);
 			
@@ -55,6 +54,11 @@ package
 			[Embed(source="ribbonTrailTexture.png")]
 			var ribbonTrailTextureCls:Class;
 			texture = Texture.fromBitmap(new ribbonTrailTextureCls(), false);
+			textures.push(texture);
+			
+			[Embed(source="laser.png")]
+			var laserCls:Class;
+			texture = Texture.fromBitmap(new laserCls(), false);
 			textures.push(texture);
 			
 			[Embed(source="ribbonTrailTexture2.png")]
@@ -83,7 +87,6 @@ package
 			ribbonTrail.isPlaying = true;
 			ribbonTrail.movingRatio = 0.4;
 			ribbonTrail.alphaRatio = 0.95;
-			ribbonTrail.colorRatio = 1;
 			addChild(ribbonTrail);
 			
 			Starling.current.juggler.add(this);
@@ -91,7 +94,7 @@ package
 		}
 		
 		private var rotation:Number = 0.0; 
-		private var color:uint = 0xFFFFFF;
+//		private var color:uint = 0xFFFFFF;
 		
 		public function advanceTime(passedTime:Number):void
 		{
@@ -110,10 +113,10 @@ package
 			var x1:Number = x - thcikness * Math.cos(rotation);
 			var y1:Number = y + thcikness * Math.sin(rotation);
 			
-			color -= 255;
+//			color -= 255;
 			
 			//the flow target color is real time change.
-			ribbonTrail.floowTo(x0, y0, x1, y1, alpha, color);
+			ribbonTrail.followTo(x0, y0, x1, y1, alpha);
 			
 			ribbonTrail.advanceTime(passedTime);
 		}
@@ -135,7 +138,7 @@ package
 					break;
 				
 				case Keyboard.F:
-					ribbonTrail.floowingEnable = !ribbonTrail.floowingEnable;
+					ribbonTrail.followingEnable = !ribbonTrail.followingEnable;
 					break;
 				
 				case Keyboard.M:
@@ -157,17 +160,6 @@ package
 					else
 					{
 						ribbonTrail.alphaRatio += 0.01;
-					}
-					break;
-				
-				case Keyboard.C:
-					if(event.ctrlKey)
-					{
-						ribbonTrail.colorRatio -= 0.01;
-					}
-					else
-					{
-						ribbonTrail.colorRatio += 0.01;
 					}
 					break;
 			}
