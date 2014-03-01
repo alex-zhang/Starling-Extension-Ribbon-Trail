@@ -43,8 +43,8 @@ package starling.extensions
 		protected var mIndexBuffer:IndexBuffer3D;
 		protected var mTexture:Texture;
 		
-		protected var mTrailSegments:Vector.<TrailSegment>;
-		protected var mNumTrailSegments:int;
+		protected var mRibbonSegments:Vector.<RibbonSegment>;
+		protected var mNumRibbonSegments:int;
 
 		protected var mFollowingEnable:Boolean = true;
 
@@ -58,6 +58,8 @@ package starling.extensions
 		
 		//color alpha uv, only the position is dynamic.
 		protected var mVertexFixedDataDirty:Boolean = false;
+		
+		protected var mFollowingRibbonSegmentLine:Vector.<RibbonSegment>;
 		
 		public function RibbonTrail(texture:Texture, 
 									trailSegments:int = 10)
@@ -78,7 +80,7 @@ package starling.extensions
 
 			mVertexData = new VertexData(0, true);
 			mIndexData = new <uint>[];
-			mTrailSegments = new <TrailSegment>[];
+			mRibbonSegments = new <RibbonSegment>[];
 
 			raiseCapacity(trailSegments);
 			createProgram();
@@ -91,7 +93,7 @@ package starling.extensions
 		protected function contextCreatedHandler(event:Object):void
 		{
 			createProgram();
-			raiseCapacity(mNumTrailSegments);
+			raiseCapacity(mNumRibbonSegments);
 		}
 		
 		public function get followingEnable():Boolean { return mFollowingEnable; }
@@ -145,30 +147,35 @@ package starling.extensions
 			}
 		}
 		
-		public function getTrailSegment(index:int):TrailSegment
+		public function getRibbonSegment(index:int):RibbonSegment
 		{
-			return mTrailSegments[index]; 
+			return mRibbonSegments[index]; 
 		}
 		
-		public function followTo(x0:Number, y0:Number, x1:Number, y1:Number,
-								alpha:Number = 1.0):void
+		/**
+		 *  u can use this method to controll all the Segments or parts of.
+		 * 	u also can pass null here to stop the effect.
+		 * 	when the line's length is short than the current's, left Segments will performance tween effect.
+		 *  or u also cann pass none-continues segments in the following-line, it's can makes lot's of effects. 
+		 * 
+		 * @param followingRibbonSegmentLine
+		 * 
+		 */		
+		public function followTrailSegmentsLine(followingRibbonSegmentLine:Vector.<RibbonSegment>):void
 		{
-			if(mFollowingEnable)
-			{
-				mTrailSegments[0].setTo(x0, y0, x1, y1, alpha);
-			}
+			mFollowingRibbonSegmentLine = followingRibbonSegmentLine;
 		}
 		
 		//because of segments have the invalid pos so syc here.
 		public function resetAllTo(x0:Number, y0:Number, x1:Number, y1:Number,
 								   alpha:Number = 1.0):void
 		{
-			var trailSegment:TrailSegment;
+			var trailSegment:RibbonSegment;
 			var trailSegmentIndex:int = 0;
 
-			while(trailSegmentIndex < mNumTrailSegments)
+			while(trailSegmentIndex < mNumRibbonSegments)
 			{
-				trailSegment = mTrailSegments[trailSegmentIndex];
+				trailSegment = mRibbonSegments[trailSegmentIndex];
 				trailSegment.setTo(x0, y0, x1, y1, alpha);
 
 				trailSegmentIndex++;
@@ -177,13 +184,13 @@ package starling.extensions
 		
 		protected function updatevertexData():void
 		{
-			var shareRatio:Number = 1 / mNumTrailSegments;
+			var shareRatio:Number = 1 / mNumRibbonSegments;
 			var ratio:Number = 0;
 
 			var vertexId:int = 0;
 			var trailSegmentIndex:int = 0;
 			
-			while(trailSegmentIndex < mNumTrailSegments)
+			while(trailSegmentIndex < mNumRibbonSegments)
 			{
 				vertexId = trailSegmentIndex * 2;
 				
@@ -214,9 +221,9 @@ package starling.extensions
 			}
 		}
 		
-		protected function createTrailSegment():TrailSegment
+		protected function createTrailSegment():RibbonSegment
 		{
-			return new TrailSegment();
+			return new RibbonSegment();
 		}
 
 		//we don't need hitTest return.
@@ -229,24 +236,38 @@ package starling.extensions
 		{
 			if(!mIsPlaying) return;
 			
+			var followingRibbonSegmentLineLength:int = mFollowingRibbonSegmentLine ? 
+				mFollowingRibbonSegmentLine.length : 0;
+			
+			if(followingRibbonSegmentLineLength == 0) return;
+
 			var vertexId:int = 0;
-			var trailSegment:TrailSegment;
-			var preTrailSegment:TrailSegment;
+			var trailSegment:RibbonSegment;
+			var followingSegment:RibbonSegment;
+			var preTrailSegment:RibbonSegment;
 			
 			var trailSegmentIndex:int = 0;
-			while(trailSegmentIndex < mNumTrailSegments)
+			while(trailSegmentIndex < mNumRibbonSegments)
 			{
-				vertexId = trailSegmentIndex * 2;
-				
-				trailSegment = mTrailSegments[trailSegmentIndex];
-				
-				if(trailSegmentIndex > 0)
+				trailSegment = mRibbonSegments[trailSegmentIndex];
+				followingSegment = trailSegmentIndex < followingRibbonSegmentLineLength ?
+					mFollowingRibbonSegmentLine[trailSegmentIndex] : null;
+
+				if(followingSegment)
 				{
-					preTrailSegment = mTrailSegments[trailSegmentIndex - 1];
-					trailSegment.tweenTo(preTrailSegment, passedTime);
+					trailSegment.copyFrom(followingSegment);
+				}
+				else if(mFollowingEnable && preTrailSegment)
+				{
+					trailSegment.tweenTo(preTrailSegment);
 				}
 				
+				//record pre.
+				preTrailSegment = trailSegment;
+				
 				//syc the vertex data from trailSegment.
+				vertexId = trailSegmentIndex * 2;
+				
 				mVertexData.setPosition(vertexId, 		   trailSegment.x0, trailSegment.y0);
 				mVertexData.setAlpha(vertexId, trailSegment.alpha);
 
@@ -283,8 +304,8 @@ package starling.extensions
 		
 		public function raiseCapacity(byAmount:int):void
 		{
-			var oldNumTrailSegments:int = mNumTrailSegments;
-			mNumTrailSegments = Math.min(8129, oldNumTrailSegments + byAmount);
+			var oldNumRibbonSegments:int = mNumRibbonSegments;
+			mNumRibbonSegments = Math.min(8129, oldNumRibbonSegments + byAmount);
 			var context:Context3D = Starling.context;
 			
 			if (context == null) throw new MissingContextError();
@@ -292,16 +313,16 @@ package starling.extensions
 			var baseVertexData:VertexData = new VertexData(2);
 			baseVertexData.setUniformColor(0xFFFFFF);
 
-			mTrailSegments.fixed = false;
+			mRibbonSegments.fixed = false;
 			mIndexData.fixed = false;
 			
-			var trailSegment:TrailSegment;
+			var trailSegment:RibbonSegment;
 			
-			for(var trailSegmentIndex:int = oldNumTrailSegments; trailSegmentIndex < mNumTrailSegments; trailSegmentIndex++)  
+			for(var trailSegmentIndex:int = oldNumRibbonSegments; trailSegmentIndex < mNumRibbonSegments; trailSegmentIndex++)  
 			{
 				trailSegment = createTrailSegment();
 				trailSegment.ribbonTrail = this;
-				mTrailSegments[trailSegmentIndex] = trailSegment;
+				mRibbonSegments[trailSegmentIndex] = trailSegment;
 				
 				mVertexData.append(baseVertexData);
 				
@@ -324,16 +345,16 @@ package starling.extensions
 				}
 			}
 			
-			mTrailSegments.fixed = true;
+			mRibbonSegments.fixed = true;
 			mIndexData.fixed = true;
 			
 			// upload data to vertex and index buffers
-			if(mNumTrailSegments > 1)
+			if(mNumRibbonSegments > 1)
 			{
 				if (mVertexBuffer) mVertexBuffer.dispose();
 				if (mIndexBuffer)  mIndexBuffer.dispose();
 				
-				mVertexBuffer = context.createVertexBuffer(mNumTrailSegments * 2, VertexData.ELEMENTS_PER_VERTEX);
+				mVertexBuffer = context.createVertexBuffer(mNumRibbonSegments * 2, VertexData.ELEMENTS_PER_VERTEX);
 				mIndexBuffer  = context.createIndexBuffer(mIndexData.length);
 
 				mIndexBuffer.uploadFromVector(mIndexData, 0, mIndexData.length);
@@ -364,7 +385,7 @@ package starling.extensions
 				mVertexFixedDataDirty = false;
 			}
 			
-			mVertexBuffer.uploadFromVector(mVertexData.rawData, 0, mNumTrailSegments * 2);
+			mVertexBuffer.uploadFromVector(mVertexData.rawData, 0, mNumRibbonSegments * 2);
 
 			//set the state.
 			context.setProgram(mProgram);
@@ -395,6 +416,10 @@ package starling.extensions
 			
 			mVertexData = null;
 			
+			mFollowingRibbonSegmentLine = null;
+			
+			mFollowingEnable = false;
+			
 			if(mVertexBuffer)
 			{
 				mVertexBuffer.dispose();
@@ -411,7 +436,7 @@ package starling.extensions
 			mVertexFixedDataDirty = false;
 			
 			mTexture = null;
-			mTrailSegments = null;
+			mRibbonSegments = null;
 			mIsPlaying = false;
 		}
 	}

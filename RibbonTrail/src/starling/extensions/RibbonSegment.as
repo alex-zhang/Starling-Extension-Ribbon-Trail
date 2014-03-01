@@ -1,7 +1,15 @@
 package starling.extensions
 {
-	public class TrailSegment
+	import flash.geom.Matrix;
+	import flash.geom.Point;
+	
+	import starling.utils.MatrixUtil;
+
+	public class RibbonSegment
 	{
+		private static var sHelperMatrix:Matrix  = new Matrix();
+		private static var sHelperPoint:Point = new Point();
+		
 		public var ribbonTrail:RibbonTrail;
 		
 		public var x0:Number = 0.0;
@@ -12,12 +20,12 @@ package starling.extensions
 		
 		public var alpha:Number = 1.0;
 		
-		public function TrailSegment()
+		public function RibbonSegment()
 		{
 			super();
 		}
 		
-		public function tweenTo(preTrailSegment:TrailSegment, passedTime:Number):void
+		public function tweenTo(preTrailSegment:RibbonSegment):void
 		{
 			var movingRatio:Number = ribbonTrail.movingRatio;
 			
@@ -51,8 +59,7 @@ package starling.extensions
 		}
 		
 		public function setTo(x0:Number, y0:Number, x1:Number, y1:Number,
-							  alpha:Number = 1.0,
-							  color:uint = 0xFFFFFF):void
+							  alpha:Number = 1.0):void
 		{
 			this.x0 = x0;
 			this.y0 = y0;
@@ -64,13 +71,45 @@ package starling.extensions
 //			this.color = color;
 		}
 		
-		public function copyFrom(trailSegment:TrailSegment):void
+		public function setTo2(centerX:Number, centerY:Number, 
+							   radius:Number, rotation:Number, 
+							   alpha:Number = 1.0):void
+		{
+			// optimization: no ratation
+			if(rotation == 0)
+			{
+				this.x0 = centerX;
+				this.y0 = centerY - radius;
+				
+				this.x1 = centerX;
+				this.y1 = centerY + radius;
+			}
+			else
+			{
+				sHelperMatrix.identity();
+				sHelperMatrix.rotate(rotation);
+
+				//pos0
+				MatrixUtil.transformCoords(sHelperMatrix, 0, -radius, sHelperPoint);
+				this.x0 = centerX + sHelperPoint.x;
+				this.y0 = centerY + sHelperPoint.y;
+				
+				//pos1
+				MatrixUtil.transformCoords(sHelperMatrix, 0, radius, sHelperPoint);
+				this.x1 = centerX + sHelperPoint.x;
+				this.y1 = centerY + sHelperPoint.y;
+			}
+			
+			this.alpha = alpha;
+		}
+		
+		public function copyFrom(trailSegment:RibbonSegment):void
 		{
 			x0 = trailSegment.x0;
 			y0 = trailSegment.y0;
 			
 			x1 = trailSegment.x1;
-			y1 = trailSegment.y0;
+			y1 = trailSegment.y1;
 			
 			alpha = trailSegment.alpha;
 //			color = trailSegment.color;

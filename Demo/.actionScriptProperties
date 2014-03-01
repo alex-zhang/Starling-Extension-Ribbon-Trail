@@ -40,5 +40,12 @@
   <modules/>
   <workers/>
   <buildCSSFiles/>
+  <publishSource>
+    <sourcePathIncludes>
+      <include path="[source path] RibbonTrail-src"/>
+      <include path="[source path] starling-src"/>
+    </sourcePathIncludes>
+    <sourceExcludes/>
+  </publishSource>
   <flashCatalyst validateFlashCatalystCompatibility="false"/>
 </actionScriptProperties>

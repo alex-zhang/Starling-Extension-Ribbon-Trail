@@ -2,17 +2,21 @@ package
 {
 	import flash.display.Stage;
 	import flash.events.KeyboardEvent;
+	import flash.geom.Matrix;
+	import flash.geom.Point;
 	import flash.ui.Keyboard;
 	
 	import starling.animation.IAnimatable;
 	import starling.core.Starling;
 	import starling.display.Sprite;
 	import starling.events.Event;
+	import starling.extensions.RibbonSegment;
 	import starling.extensions.RibbonTrail;
 	import starling.text.TextField;
 	import starling.textures.Texture;
 	import starling.textures.TextureAtlas;
 	import starling.utils.HAlign;
+	import starling.utils.MatrixUtil;
 	import starling.utils.VAlign;
 	import starling.utils.deg2rad;
 
@@ -83,7 +87,7 @@ package
 			textures.push(textureAtlas0.getTexture("flight_00"));
 
 			//init ribbonTrail
-			ribbonTrail = new RibbonTrail(textures[0], 50);
+			ribbonTrail = new RibbonTrail(textures[0], 10);
 			ribbonTrail.isPlaying = true;
 			ribbonTrail.movingRatio = 0.4;
 			ribbonTrail.alphaRatio = 0.95;
@@ -91,10 +95,16 @@ package
 			
 			Starling.current.juggler.add(this);
 			Starling.current.nativeStage.addEventListener(KeyboardEvent.KEY_UP, stageKeyUpHandler);
+			
+			ribbonTrail.followTrailSegmentsLine(followingRibbonSegmentLine);
 		}
 		
 		private var rotation:Number = 0.0; 
 //		private var color:uint = 0xFFFFFF;
+		
+		private var followingRibbonSegment:RibbonSegment = new RibbonSegment();
+		private var followingRibbonSegmentLine:Vector.<RibbonSegment> = 
+			new <RibbonSegment>[followingRibbonSegment];
 		
 		public function advanceTime(passedTime:Number):void
 		{
@@ -107,17 +117,9 @@ package
 			
 			rotation += deg2rad(90 * passedTime);
 			
-			var x0:Number = x + thcikness * Math.cos(rotation);
-			var y0:Number = y - thcikness * Math.sin(rotation);
-
-			var x1:Number = x - thcikness * Math.cos(rotation);
-			var y1:Number = y + thcikness * Math.sin(rotation);
-			
-//			color -= 255;
+			followingRibbonSegment.setTo2(x, y, thcikness, rotation);
 			
 			//the flow target color is real time change.
-			ribbonTrail.followTo(x0, y0, x1, y1, alpha);
-			
 			ribbonTrail.advanceTime(passedTime);
 		}
 		
