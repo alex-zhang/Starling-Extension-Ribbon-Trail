@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="LlamaDebugger" default="main" basedir=".">
+
+    <property name="libs_download.dir" value="${basedir}/libs"/>
+
+    <target name="main">
+        <echo message="main"/> 
+    </target>
+
+    <target name="download_libs">
+
+        <antcall target="download_file">
+            <param name="download_file_url" value="https://raw.githubusercontent.com/alex-zhang/SWC-Libs-Repo/master/starling.swc"/>
+        </antcall>
+
+    </target>
+
+    <!--help for download-->
+    <target name="download_file">
+        <get src="${download_file_url}" dest="${libs_download.dir}"/>
+        <echo message="${download_file_url} has loaded."/>
+    </target>
+</project>	

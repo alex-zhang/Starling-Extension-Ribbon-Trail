@@ -417,7 +417,7 @@ package starling.extensions
 			mVertexData = null;
 			
 			mFollowingRibbonSegmentLine = null;
-			
+
 			mFollowingEnable = false;
 			
 			if(mVertexBuffer)
