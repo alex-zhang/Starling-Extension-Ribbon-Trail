@@ -291,7 +291,7 @@ package starling.extensions
 					"mov v1, va2 \n";      // pass texture coordinates to fragment program
 				
 				var fragmentProgramCode:String =
-					"tex ft0, v1, fs0 <2d,linear,repeat> \n" + // sample texture 0
+					"tex ft0, v1, fs0 <2d,linear,clamp> \n" + // sample texture 0
 					"mul oc, ft0, v0";                        // multiply color with texel color
 				
 				var assembler:AGALMiniAssembler = new AGALMiniAssembler();
